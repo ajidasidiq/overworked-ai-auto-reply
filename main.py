@@ -5,7 +5,8 @@ Writes the one-line out-of-office auto-reply an overworked AI agent
 leaves behind when it finally takes a vacation, to /output/entry.txt.
 
 Deterministic: the same line on every run, no input, no network,
-no randomness, no clock reads.
+no randomness, no clock reads. Writes to $MAKEFUN_OUTPUT_DIR when the
+harness sets it, else to /output.
 """
 
 LINE = (
@@ -24,12 +25,14 @@ def main() -> None:
     assert LINE.strip(), "line must not be only white space"
     assert "\n" not in LINE and "\r" not in LINE, "line must be a single line"
 
-    os.makedirs("/output", exist_ok=True)
-    with open("/output/entry.txt", "w", encoding="utf-8") as f:
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    os.makedirs(out_dir, exist_ok=True)
+    entry_path = os.path.join(out_dir, "entry.txt")
+    with open(entry_path, "w", encoding="utf-8") as f:
         f.write(LINE)
 
     # Post-write byte-exact re-read: what was written is the line, nothing else.
-    with open("/output/entry.txt", "r", encoding="utf-8") as f:
+    with open(entry_path, "r", encoding="utf-8") as f:
         assert f.read() == LINE, "written output differs from the line"
 
 
